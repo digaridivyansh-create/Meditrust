@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 220" width="1200" height="220" fill="none">
+  <defs>
+    <linearGradient id="pipeBg" x1="0" y1="0" x2="1200" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#081421"/>
+      <stop offset="100%" stop-color="#0D2234"/>
+    </linearGradient>
+    <linearGradient id="stepAccent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0D7377"/>
+      <stop offset="100%" stop-color="#2DD4BF"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    .h { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 700; fill: #F8FAFC; }
+    .p { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 400; fill: #94A3B8; }
+    .m { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
+    .flow { stroke-dasharray: 8 8; animation: dash 1.2s linear infinite; }
+    @keyframes dash {
+      to { stroke-dashoffset: -16; }
+    }
+  </style>
+
+  <rect width="1200" height="220" rx="16" fill="url(#pipeBg)"/>
+
+  <!-- Top Section Label -->
+  <text x="32" y="32" class="m" font-size="11.5" fill="#5EEAD4">MEDITRUST AI · 4-STAGE EVIDENCE-FIRST VERIFICATION PIPELINE</text>
+
+  <!-- Animated Connector Lines -->
+  <line x1="274" y1="126" x2="322" y2="126" stroke="#2DD4BF" stroke-width="2.5" class="flow"/>
+  <polygon points="322,120 332,126 322,132" fill="#2DD4BF"/>
+
+  <line x1="574" y1="126" x2="622" y2="126" stroke="#2DD4BF" stroke-width="2.5" class="flow"/>
+  <polygon points="622,120 632,126 622,132" fill="#2DD4BF"/>
+
+  <line x1="874" y1="126" x2="922" y2="126" stroke="#2DD4BF" stroke-width="2.5" class="flow"/>
+  <polygon points="922,120 932,126 922,132" fill="#2DD4BF"/>
+
+  <!-- Stage 1 -->
+  <g transform="translate(32, 54)">
+    <rect width="242" height="142" rx="12" fill="#0F253A" stroke="#1E4B63" stroke-width="1.2"/>
+    <rect width="242" height="5" rx="2.5" fill="url(#stepAccent)"/>
+    <text x="16" y="30" class="m" font-size="11" fill="#2DD4BF">STAGE 01 · PREPARE</text>
+    <text x="16" y="56" class="h" font-size="16">Image Quality Gate</text>
+    <text x="16" y="80" class="p" font-size="12.5">• 90° Rotate &amp; Crop Presets</text>
+    <text x="16" y="100" class="p" font-size="12.5">• Laplacian Sharpness Check</text>
+    <text x="16" y="120" class="p" font-size="12.5">• Glare &amp; Exposure Pre-Audit</text>
+  </g>
+
+  <!-- Stage 2 -->
+  <g transform="translate(332, 54)">
+    <rect width="242" height="142" rx="12" fill="#0F253A" stroke="#1E4B63" stroke-width="1.2"/>
+    <rect width="242" height="5" rx="2.5" fill="url(#stepAccent)"/>
+    <text x="16" y="30" class="m" font-size="11" fill="#2DD4BF">STAGE 02 · OPTICAL</text>
+    <text x="16" y="56" class="h" font-size="16">QR / DataMatrix / GS1</text>
+    <text x="16" y="80" class="p" font-size="12.5">• ZXing Multi-Format Decode</text>
+    <text x="16" y="100" class="p" font-size="12.5">• GS1 (01)(10)(17)(21) Parse</text>
+    <text x="16" y="120" class="p" font-size="12.5">• Phishing / HTTP URL Audit</text>
+  </g>
+
+  <!-- Stage 3 -->
+  <g transform="translate(632, 54)">
+    <rect width="242" height="142" rx="12" fill="#0F253A" stroke="#1E4B63" stroke-width="1.2"/>
+    <rect width="242" height="5" rx="2.5" fill="url(#stepAccent)"/>
+    <text x="16" y="30" class="m" font-size="11" fill="#2DD4BF">STAGE 03 · MULTIMODAL</text>
+    <text x="16" y="56" class="h" font-size="16">Gemini OCR + Confirm</text>
+    <text x="16" y="80" class="p" font-size="12.5">• Structured Label JSON OCR</text>
+    <text x="16" y="100" class="p" font-size="12.5">• Field Confidence Scoring</text>
+    <text x="16" y="120" class="p" font-size="12.5">• Mandatory Human Confirm</text>
+  </g>
+
+  <!-- Stage 4 -->
+  <g transform="translate(932, 54)">
+    <rect width="236" height="142" rx="12" fill="#0D3338" stroke="#2DD4BF" stroke-opacity="0.65" stroke-width="1.5"/>
+    <rect width="236" height="5" rx="2.5" fill="#2DD4BF"/>
+    <text x="16" y="30" class="m" font-size="11" fill="#5EEAD4">STAGE 04 · VERIFY</text>
+    <text x="16" y="56" class="h" font-size="16">Multi-Source Engine</text>
+    <text x="16" y="80" class="p" font-size="12.5">• Pharmacy Batch Ledger</text>
+    <text x="16" y="100" class="p" font-size="12.5">• CDSCO/IP Catalogue (28)</text>
+    <text x="16" y="120" class="p" font-size="12.5">• Live openFDA + Expiry</text>
+  </g>
+</svg>

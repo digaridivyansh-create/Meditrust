@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1200" y2="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06121F"/>
+      <stop offset="55%" stop-color="#0B1B2B"/>
+      <stop offset="100%" stop-color="#0A3D42"/>
+    </linearGradient>
+    <linearGradient id="tealGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2DD4BF"/>
+      <stop offset="100%" stop-color="#0D7377"/>
+    </linearGradient>
+    <linearGradient id="scanBeam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2DD4BF" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#2DD4BF" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#2DD4BF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#1E3A5F" stroke-width="0.6" stroke-opacity="0.35"/>
+    </pattern>
+    <clipPath id="cardClip">
+      <rect x="860" y="48" width="286" height="204" rx="16"/>
+    </clipPath>
+  </defs>
+
+  <style>
+    .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 800; fill: #FFFFFF; letter-spacing: -0.5px; }
+    .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 500; fill: #94A3B8; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-weight: 600; }
+    .pulse-ring { transform-origin: 120px 148px; animation: pulseRing 3s ease-out infinite; }
+    .pulse-ring-2 { transform-origin: 120px 148px; animation: pulseRing 3s ease-out 1.5s infinite; }
+    .scan-line { animation: scanMove 2.8s ease-in-out infinite; }
+    .ecg-path { stroke-dasharray: 420; stroke-dashoffset: 420; animation: drawEcg 3.6s linear infinite; }
+    .dot-blink { animation: blink 1.6s ease-in-out infinite; }
+
+    @keyframes pulseRing {
+      0% { transform: scale(0.88); opacity: 0.7; }
+      100% { transform: scale(1.42); opacity: 0; }
+    }
+    @keyframes scanMove {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(156px); }
+      100% { transform: translateY(0px); }
+    }
+    @keyframes drawEcg {
+      0% { stroke-dashoffset: 420; opacity: 0.2; }
+      25% { opacity: 1; }
+      85% { stroke-dashoffset: 0; opacity: 1; }
+      100% { stroke-dashoffset: 0; opacity: 0.2; }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+  </style>
+
+  <!-- Background -->
+  <rect width="1200" height="300" rx="20" fill="url(#bgGrad)"/>
+  <rect width="1200" height="300" rx="20" fill="url(#grid)"/>
+
+  <!-- Ambient radial accents -->
+  <circle cx="120" cy="148" r="140" fill="#0D7377" fill-opacity="0.18"/>
+  <circle cx="1010" cy="150" r="170" fill="#2DD4BF" fill-opacity="0.1"/>
+
+  <!-- Left Animated MediTrust Shield Emblem -->
+  <circle cx="120" cy="148" r="56" stroke="#2DD4BF" stroke-width="1.5" stroke-opacity="0.5" class="pulse-ring"/>
+  <circle cx="120" cy="148" r="56" stroke="#2DD4BF" stroke-width="1.2" stroke-opacity="0.35" class="pulse-ring-2"/>
+  <rect x="68" y="96" width="104" height="104" rx="26" fill="#071626" stroke="#2DD4BF" stroke-opacity="0.45" stroke-width="1.5"/>
+  <path d="M120 112L149 124V147C149 166 136.5 180 120 185C103.5 180 91 166 91 147V124L120 112Z" fill="#0D7377" fill-opacity="0.32" stroke="#2DD4BF" stroke-width="2.8" stroke-linejoin="round"/>
+  <path d="M120 130V162M104 146H136" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M133 164L140 171L154 157" stroke="#2DD4BF" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Center Brand & Value Proposition -->
+  <g transform="translate(206, 82)">
+    <rect x="0" y="0" width="276" height="26" rx="13" fill="#0D7377" fill-opacity="0.28" stroke="#2DD4BF" stroke-opacity="0.45" stroke-width="1"/>
+    <circle cx="15" cy="13" r="4" fill="#2DD4BF" class="dot-blink"/>
+    <text x="27" y="17" class="mono" font-size="11" fill="#5EEAD4">EVIDENCE-BASED MEDICINE SAFETY AI</text>
+
+    <text x="0" y="74" class="title" font-size="52">MediTrust AI</text>
+    <text x="2" y="106" class="subtitle" font-size="17">Counterfeit Medicine Detection · Dual Patient &amp; Pharmacist Portals</text>
+
+    <!-- Animated pulse line -->
+    <path d="M 0 138 L 130 138 L 146 122 L 160 152 L 174 114 L 188 144 L 202 138 L 410 138" stroke="#1E3A5F" stroke-width="2" fill="none"/>
+    <path d="M 0 138 L 130 138 L 146 122 L 160 152 L 174 114 L 188 144 L 202 138 L 410 138" stroke="#2DD4BF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" class="ecg-path"/>
+
+    <!-- Feature pills -->
+    <g transform="translate(0, 160)">
+      <rect x="0" y="0" width="142" height="28" rx="7" fill="#0F263D" stroke="#1E4B63" stroke-width="1"/>
+      <text x="14" y="18" class="mono" font-size="11.5" fill="#E2E8F0">OCR + GS1 QR</text>
+
+      <rect x="152" y="0" width="154" height="28" rx="7" fill="#0F263D" stroke="#1E4B63" stroke-width="1"/>
+      <text x="166" y="18" class="mono" font-size="11.5" fill="#E2E8F0">8 AI Agent Tools</text>
+
+      <rect x="316" y="0" width="166" height="28" rx="7" fill="#0F263D" stroke="#1E4B63" stroke-width="1"/>
+      <text x="330" y="18" class="mono" font-size="11.5" fill="#E2E8F0">FEFO Forecasting</text>
+
+      <rect x="492" y="0" width="112" height="28" rx="7" fill="#0F263D" stroke="#1E4B63" stroke-width="1"/>
+      <text x="506" y="18" class="mono" font-size="11.5" fill="#5EEAD4">EN / हिन्दी</text>
+    </g>
+  </g>
+
+  <!-- Right Live Animated Scanner Card -->
+  <rect x="860" y="48" width="286" height="204" rx="16" fill="#081828" stroke="#2DD4BF" stroke-opacity="0.4" stroke-width="1.4"/>
+
+  <g clip-path="url(#cardClip)">
+    <!-- Scanner corner brackets -->
+    <path d="M882 86V70H898 M1124 86V70H1108 M882 214V230H898 M1124 214V230H1108" stroke="#2DD4BF" stroke-width="2.2" stroke-linecap="round"/>
+
+    <!-- Simulated Medicine Label -->
+    <text x="896" y="102" class="mono" font-size="10.5" fill="#5EEAD4">BATCH VERIFICATION LIVE</text>
+    <text x="896" y="128" class="title" font-size="18">Dolo-650 IP</text>
+    <text x="896" y="148" class="mono" font-size="11" fill="#94A3B8">LOT: DL650-26A14</text>
+    <text x="896" y="166" class="mono" font-size="11" fill="#94A3B8">EXP: 2028-03-01</text>
+
+    <!-- Stylized QR Matrix -->
+    <g transform="translate(1042, 108)" fill="#CBD5E1" fill-opacity="0.85">
+      <rect x="0" y="0" width="16" height="16" rx="2" fill="none" stroke="#2DD4BF" stroke-width="2.5"/>
+      <rect x="5" y="5" width="6" height="6" fill="#2DD4BF"/>
+      <rect x="34" y="0" width="16" height="16" rx="2" fill="none" stroke="#2DD4BF" stroke-width="2.5"/>
+      <rect x="39" y="5" width="6" height="6" fill="#2DD4BF"/>
+      <rect x="0" y="34" width="16" height="16" rx="2" fill="none" stroke="#2DD4BF" stroke-width="2.5"/>
+      <rect x="5" y="39" width="6" height="6" fill="#2DD4BF"/>
+      <rect x="22" y="4" width="6" height="6"/>
+      <rect x="22" y="18" width="6" height="10"/>
+      <rect x="34" y="22" width="14" height="6"/>
+      <rect x="24" y="34" width="10" height="6"/>
+      <rect x="40" y="34" width="10" height="16"/>
+      <rect x="22" y="44" width="12" height="6"/>
+    </g>
+
+    <!-- Status Pill -->
+    <rect x="896" y="188" width="214" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <circle cx="912" cy="202" r="4" fill="#34D399"/>
+    <text x="924" y="206" class="mono" font-size="11" fill="#A7F3D0">VERIFIED_MATCH · LEDGER</text>
+
+    <!-- Animated Laser Scan Sweep -->
+    <g class="scan-line">
+      <rect x="868" y="64" width="270" height="22" fill="url(#scanBeam)"/>
+      <line x1="872" y1="75" x2="1134" y2="75" stroke="#5EEAD4" stroke-width="2"/>
+    </g>
+  </g>
+</svg>
