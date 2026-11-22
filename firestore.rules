@@ -1,0 +1,453 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitive Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAuthenticatedAccount() {
+      return isSignedIn() && request.auth.uid is string && request.auth.uid.size() > 0;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isBoundedString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidVerificationStatus(val) {
+      return val in ['verified_match', 'mismatch_suspicious', 'needs_review', 'not_found', 'provider_unavailable'];
+    }
+
+    function isValidPortalRole(val) {
+      return val in ['patient', 'pharmacist'];
+    }
+
+    function isValidLanguage(val) {
+      return val in ['en', 'hi', 'hinglish'];
+    }
+
+    function isValidStringList(data, key, maxItems) {
+      return !(key in data) || (
+        data[key] is list &&
+        data[key].size() <= maxItems &&
+        (data[key].size() == 0 || (data[key][0] is string && data[key][0].size() <= 300))
+      );
+    }
+
+    // --- Validation Blueprints ---
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'portalRole', 'preferredLanguage', 'consentAccepted', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'portalRole', 'preferredLanguage', 'consentAccepted', 'pharmacyName', 'licenseNumber', 'city', 'nearExpiryDays', 'createdAt', 'updatedAt']) &&
+        data.uid == request.auth.uid &&
+        data.uid == userId &&
+        isValidId(data.uid) &&
+        isBoundedString(data.email, 3, 200) &&
+        isBoundedString(data.displayName, 1, 120) &&
+        isValidPortalRole(data.portalRole) &&
+        isValidLanguage(data.preferredLanguage) &&
+        data.consentAccepted is bool &&
+        isOptionalString(data, 'pharmacyName', 160) &&
+        isOptionalString(data, 'licenseNumber', 80) &&
+        isOptionalString(data, 'city', 100) &&
+        (!('nearExpiryDays' in data) || (data.nearExpiryDays is number && data.nearExpiryDays >= 7 && data.nearExpiryDays <= 365)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidMedicineScan(data) {
+      return data.keys().hasAll(['ownerId', 'portalRole', 'medicineName', 'verificationStatus', 'expiryStatus', 'sourceName', 'confidenceSummary', 'userCorrected', 'reviewStatus', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'portalRole', 'medicineName', 'genericName', 'strength', 'dosageForm', 'manufacturer', 'batchNumber', 'mfgDate', 'expiryDate', 'licenseInfo', 'identifiers', 'confidenceSummary', 'verificationStatus', 'expiryStatus', 'sourceName', 'sourceEvidence', 'safetyNotices', 'limitations', 'nextStep', 'userCorrected', 'reviewStatus', 'reviewerNotes', 'createdAt', 'updatedAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isValidPortalRole(data.portalRole) &&
+        isBoundedString(data.medicineName, 1, 180) &&
+        isOptionalString(data, 'genericName', 180) &&
+        isOptionalString(data, 'strength', 80) &&
+        isOptionalString(data, 'dosageForm', 80) &&
+        isOptionalString(data, 'manufacturer', 180) &&
+        isOptionalString(data, 'batchNumber', 80) &&
+        isOptionalString(data, 'mfgDate', 40) &&
+        isOptionalString(data, 'expiryDate', 40) &&
+        isOptionalString(data, 'licenseInfo', 160) &&
+        isOptionalString(data, 'identifiers', 240) &&
+        data.confidenceSummary in ['high', 'medium', 'low'] &&
+        isValidVerificationStatus(data.verificationStatus) &&
+        data.expiryStatus in ['valid', 'near_expiry', 'expired', 'ambiguous'] &&
+        isBoundedString(data.sourceName, 1, 180) &&
+        isOptionalString(data, 'sourceEvidence', 2000) &&
+        isOptionalString(data, 'safetyNotices', 2000) &&
+        isOptionalString(data, 'limitations', 1000) &&
+        isOptionalString(data, 'nextStep', 600) &&
+        data.userCorrected is bool &&
+        data.reviewStatus in ['none', 'pending_review', 'escalated', 'quarantined', 'cleared'] &&
+        isOptionalString(data, 'reviewerNotes', 1000) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidPrescription(data) {
+      return data.keys().hasAll(['ownerId', 'medicineName', 'dosage', 'frequency', 'status', 'adherenceCount', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'medicineName', 'dosage', 'frequency', 'prescriberName', 'clinicName', 'issueDate', 'endDate', 'status', 'notes', 'linkedBatchNumber', 'adherenceCount', 'lastTakenAt', 'sourceDocumentHash', 'createdAt', 'updatedAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isBoundedString(data.medicineName, 1, 180) &&
+        isBoundedString(data.dosage, 1, 120) &&
+        isBoundedString(data.frequency, 1, 120) &&
+        isOptionalString(data, 'prescriberName', 140) &&
+        isOptionalString(data, 'clinicName', 160) &&
+        isOptionalString(data, 'issueDate', 40) &&
+        isOptionalString(data, 'endDate', 40) &&
+        data.status in ['active', 'completed', 'paused', 'flagged'] &&
+        isOptionalString(data, 'notes', 800) &&
+        isOptionalString(data, 'linkedBatchNumber', 80) &&
+        data.adherenceCount is number && data.adherenceCount >= 0 && data.adherenceCount <= 10000 &&
+        isOptionalString(data, 'lastTakenAt', 60) &&
+        isOptionalString(data, 'sourceDocumentHash', 128) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidVerifiedDocument(data) {
+      return data.keys().hasAll(['ownerId', 'portalRole', 'documentTitle', 'documentType', 'fileName', 'fileMimeType', 'sha256Hash', 'verificationStatus', 'confidenceLevel', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'portalRole', 'documentTitle', 'documentType', 'fileName', 'fileMimeType', 'sha256Hash', 'issuerName', 'documentDate', 'extractedSummary', 'extractedEntities', 'anomalies', 'verificationStatus', 'confidenceLevel', 'reviewNotes', 'createdAt', 'updatedAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isValidPortalRole(data.portalRole) &&
+        isBoundedString(data.documentTitle, 1, 180) &&
+        data.documentType in ['prescription', 'invoice', 'leaflet', 'coa', 'lab_report', 'other'] &&
+        isBoundedString(data.fileName, 1, 200) &&
+        isBoundedString(data.fileMimeType, 1, 100) &&
+        isBoundedString(data.sha256Hash, 16, 128) &&
+        data.sha256Hash.matches('^[a-fA-F0-9]+$') &&
+        isOptionalString(data, 'issuerName', 180) &&
+        isOptionalString(data, 'documentDate', 40) &&
+        isOptionalString(data, 'extractedSummary', 2000) &&
+        isValidStringList(data, 'extractedEntities', 20) &&
+        isValidStringList(data, 'anomalies', 15) &&
+        isValidVerificationStatus(data.verificationStatus) &&
+        data.confidenceLevel in ['high', 'medium', 'low'] &&
+        isOptionalString(data, 'reviewNotes', 1000) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidInventoryBatch(data) {
+      return data.keys().hasAll(['ownerId', 'pharmacyName', 'medicineName', 'manufacturer', 'batchNumber', 'expiryDate', 'supplierName', 'quantityOnHand', 'reorderThreshold', 'unitPrice', 'verificationStatus', 'recallFlagged', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'pharmacyName', 'medicineName', 'genericName', 'strength', 'dosageForm', 'manufacturer', 'batchNumber', 'mfgDate', 'expiryDate', 'supplierName', 'invoiceRef', 'quantityOnHand', 'reorderThreshold', 'unitPrice', 'verificationStatus', 'recallFlagged', 'createdAt', 'updatedAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isBoundedString(data.pharmacyName, 1, 160) &&
+        isBoundedString(data.medicineName, 1, 180) &&
+        isOptionalString(data, 'genericName', 180) &&
+        isOptionalString(data, 'strength', 80) &&
+        isOptionalString(data, 'dosageForm', 80) &&
+        isBoundedString(data.manufacturer, 1, 180) &&
+        isBoundedString(data.batchNumber, 1, 80) &&
+        isOptionalString(data, 'mfgDate', 40) &&
+        isBoundedString(data.expiryDate, 4, 40) &&
+        isBoundedString(data.supplierName, 1, 160) &&
+        isOptionalString(data, 'invoiceRef', 100) &&
+        data.quantityOnHand is number && data.quantityOnHand >= 0 && data.quantityOnHand <= 1000000 &&
+        data.reorderThreshold is number && data.reorderThreshold >= 0 && data.reorderThreshold <= 100000 &&
+        data.unitPrice is number && data.unitPrice >= 0 && data.unitPrice <= 1000000 &&
+        isValidVerificationStatus(data.verificationStatus) &&
+        data.recallFlagged is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidLedgerEntry(data) {
+      return data.keys().hasAll(['ownerId', 'batchId', 'batchNumber', 'medicineName', 'movementType', 'quantityDelta', 'resultingBalance', 'reason', 'actorName', 'createdAt']) &&
+        data.keys().hasOnly(['ownerId', 'batchId', 'batchNumber', 'medicineName', 'movementType', 'quantityDelta', 'resultingBalance', 'reason', 'invoiceRef', 'actorName', 'createdAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isValidId(data.batchId) &&
+        isBoundedString(data.batchNumber, 1, 80) &&
+        isBoundedString(data.medicineName, 1, 180) &&
+        data.movementType in ['RECEIPT', 'DISPENSE', 'RETURN', 'ADJUSTMENT', 'TRANSFER', 'RECONCILIATION'] &&
+        data.quantityDelta is number && data.quantityDelta >= -1000000 && data.quantityDelta <= 1000000 &&
+        data.resultingBalance is number && data.resultingBalance >= 0 && data.resultingBalance <= 1000000 &&
+        isBoundedString(data.reason, 1, 400) &&
+        isOptionalString(data, 'invoiceRef', 100) &&
+        isBoundedString(data.actorName, 1, 120) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidTraceabilityEvent(data) {
+      return data.keys().hasAll(['ownerId', 'batchId', 'batchNumber', 'medicineName', 'eventType', 'actorOrg', 'quantity', 'eventDate', 'createdAt']) &&
+        data.keys().hasOnly(['ownerId', 'batchId', 'batchNumber', 'medicineName', 'eventType', 'actorOrg', 'sourceLocation', 'destinationLocation', 'quantity', 'evidenceRef', 'notes', 'eventDate', 'createdAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isValidId(data.batchId) &&
+        isBoundedString(data.batchNumber, 1, 80) &&
+        isBoundedString(data.medicineName, 1, 180) &&
+        data.eventType in ['MANUFACTURED', 'DISPATCHED', 'RECEIVED', 'TRANSFERRED', 'DISPENSED', 'QUARANTINED'] &&
+        isBoundedString(data.actorOrg, 1, 160) &&
+        isOptionalString(data, 'sourceLocation', 160) &&
+        isOptionalString(data, 'destinationLocation', 160) &&
+        data.quantity is number && data.quantity >= 0 && data.quantity <= 1000000 &&
+        isOptionalString(data, 'evidenceRef', 140) &&
+        isOptionalString(data, 'notes', 500) &&
+        isBoundedString(data.eventDate, 4, 40) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidSafetyAlert(data) {
+      return data.keys().hasAll(['ownerId', 'portalRole', 'alertType', 'severity', 'title', 'triggerDetails', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'portalRole', 'alertType', 'severity', 'title', 'triggerDetails', 'affectedProduct', 'affectedBatch', 'sourceReference', 'status', 'createdAt', 'updatedAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isValidPortalRole(data.portalRole) &&
+        data.alertType in ['expired', 'near_expiry', 'low_stock', 'recall', 'mismatch', 'document_flag'] &&
+        data.severity in ['critical', 'warning', 'info'] &&
+        isBoundedString(data.title, 1, 200) &&
+        isBoundedString(data.triggerDetails, 1, 1000) &&
+        isOptionalString(data, 'affectedProduct', 180) &&
+        isOptionalString(data, 'affectedBatch', 80) &&
+        isOptionalString(data, 'sourceReference', 240) &&
+        data.status in ['open', 'acknowledged', 'resolved'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidChatMessage(data) {
+      return data.keys().hasAll(['ownerId', 'portalRole', 'sessionId', 'sender', 'language', 'content', 'createdAt']) &&
+        data.keys().hasOnly(['ownerId', 'portalRole', 'sessionId', 'sender', 'language', 'content', 'attachmentName', 'groundingRef', 'createdAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isValidPortalRole(data.portalRole) &&
+        isValidId(data.sessionId) &&
+        data.sender in ['user', 'assistant'] &&
+        isValidLanguage(data.language) &&
+        isBoundedString(data.content, 1, 8000) &&
+        isOptionalString(data, 'attachmentName', 200) &&
+        isOptionalString(data, 'groundingRef', 240) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidAuditEvent(data) {
+      return data.keys().hasAll(['ownerId', 'portalRole', 'actorName', 'action', 'targetType', 'targetId', 'details', 'createdAt']) &&
+        data.keys().hasOnly(['ownerId', 'portalRole', 'actorName', 'action', 'targetType', 'targetId', 'details', 'createdAt']) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.ownerId) &&
+        isValidPortalRole(data.portalRole) &&
+        isBoundedString(data.actorName, 1, 120) &&
+        isBoundedString(data.action, 1, 100) &&
+        isBoundedString(data.targetType, 1, 60) &&
+        isValidId(data.targetId) &&
+        isBoundedString(data.details, 1, 1000) &&
+        data.createdAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    // 1. User Profiles (Strict PII Isolation)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAuthenticatedAccount() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().email == existing().email &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'portalRole', 'preferredLanguage', 'consentAccepted', 'pharmacyName', 'licenseNumber', 'city', 'nearExpiryDays', 'updatedAt']);
+      allow delete: if isAuthenticatedAccount() && isValidId(userId) && isOwner(userId);
+    }
+
+    // 2. Medicine Scans
+    match /scans/{scanId} {
+      allow get: if isValidId(scanId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(scanId) &&
+        isValidMedicineScan(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAuthenticatedAccount() &&
+        isValidId(scanId) &&
+        isValidMedicineScan(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['reviewStatus', 'reviewerNotes', 'updatedAt']);
+      allow delete: if isAuthenticatedAccount() && isValidId(scanId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 3. Patient Prescriptions
+    match /prescriptions/{prescriptionId} {
+      allow get: if isValidId(prescriptionId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(prescriptionId) &&
+        isValidPrescription(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAuthenticatedAccount() &&
+        isValidId(prescriptionId) &&
+        isValidPrescription(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['adherenceCount', 'lastTakenAt', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'dosage', 'frequency', 'endDate', 'linkedBatchNumber', 'updatedAt'])
+        );
+      allow delete: if isAuthenticatedAccount() && isValidId(prescriptionId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 4. Verified Documents
+    match /verified_documents/{docId} {
+      allow get: if isValidId(docId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(docId) &&
+        isValidVerifiedDocument(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAuthenticatedAccount() &&
+        isValidId(docId) &&
+        isValidVerifiedDocument(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().sha256Hash == existing().sha256Hash &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['verificationStatus', 'reviewNotes', 'updatedAt']);
+      allow delete: if isAuthenticatedAccount() && isValidId(docId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 5. Pharmacy Inventory Batches
+    match /inventory_batches/{batchId} {
+      allow get: if isValidId(batchId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(batchId) &&
+        isValidInventoryBatch(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAuthenticatedAccount() &&
+        isValidId(batchId) &&
+        isValidInventoryBatch(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().batchNumber == existing().batchNumber &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['quantityOnHand', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['reorderThreshold', 'unitPrice', 'verificationStatus', 'recallFlagged', 'updatedAt'])
+        );
+      allow delete: if isAuthenticatedAccount() && isValidId(batchId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 6. Immutable Inventory Ledger (Append-Only + Atomicity Master Gate)
+    match /inventory_ledger/{entryId} {
+      allow get: if isValidId(entryId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(entryId) &&
+        isValidLedgerEntry(incoming()) &&
+        incoming().createdAt == request.time &&
+        existsAfter(/databases/$(database)/documents/inventory_batches/$(incoming().batchId)) &&
+        getAfter(/databases/$(database)/documents/inventory_batches/$(incoming().batchId)).data.ownerId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // 7. Immutable Supply Chain Traceability Events (Append-Only + Atomicity Master Gate)
+    match /traceability_events/{eventId} {
+      allow get: if isValidId(eventId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(eventId) &&
+        isValidTraceabilityEvent(incoming()) &&
+        incoming().createdAt == request.time &&
+        existsAfter(/databases/$(database)/documents/inventory_batches/$(incoming().batchId)) &&
+        getAfter(/databases/$(database)/documents/inventory_batches/$(incoming().batchId)).data.ownerId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // 8. Safety Alerts (Terminal State Locking when resolved)
+    match /alerts/{alertId} {
+      allow get: if isValidId(alertId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(alertId) &&
+        isValidSafetyAlert(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAuthenticatedAccount() &&
+        isValidId(alertId) &&
+        isValidSafetyAlert(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        existing().status != 'resolved' &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isAuthenticatedAccount() && isValidId(alertId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 9. Chat Messages
+    match /chat_messages/{messageId} {
+      allow get: if isValidId(messageId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(messageId) &&
+        isValidChatMessage(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAuthenticatedAccount() && isValidId(messageId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 10. Immutable Audit Events (Append-Only)
+    match /audit_events/{auditId} {
+      allow get: if isValidId(auditId) && isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticatedAccount() &&
+        isValidId(auditId) &&
+        isValidAuditEvent(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

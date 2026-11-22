@@ -1,0 +1,6 @@
+{
+  "name": "MediTrust AI",
+  "description": "AI-powered counterfeit medicine detection, evidence-based authenticity verification, prescription tracking, pharmacy inventory ledger, and multilingual safety platform.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

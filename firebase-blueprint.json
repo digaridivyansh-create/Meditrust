@@ -1,0 +1,268 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated patient or pharmacist profile with portal settings and pharmacy workspace info.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "format": "email", "maxLength": 200 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "portalRole": { "type": "string", "enum": ["patient", "pharmacist"] },
+        "preferredLanguage": { "type": "string", "enum": ["en", "hi", "hinglish"] },
+        "consentAccepted": { "type": "boolean" },
+        "pharmacyName": { "type": "string", "maxLength": 160 },
+        "licenseNumber": { "type": "string", "maxLength": 80 },
+        "city": { "type": "string", "maxLength": 100 },
+        "nearExpiryDays": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "portalRole", "preferredLanguage", "consentAccepted", "createdAt", "updatedAt"]
+    },
+    "MedicineScan": {
+      "title": "MedicineScan",
+      "description": "AI OCR extraction and evidence-based verification record for a medicine pack.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "portalRole": { "type": "string", "enum": ["patient", "pharmacist"] },
+        "medicineName": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "genericName": { "type": "string", "maxLength": 180 },
+        "strength": { "type": "string", "maxLength": 80 },
+        "dosageForm": { "type": "string", "maxLength": 80 },
+        "manufacturer": { "type": "string", "maxLength": 180 },
+        "batchNumber": { "type": "string", "maxLength": 80 },
+        "mfgDate": { "type": "string", "maxLength": 40 },
+        "expiryDate": { "type": "string", "maxLength": 40 },
+        "licenseInfo": { "type": "string", "maxLength": 160 },
+        "identifiers": { "type": "string", "maxLength": 240 },
+        "confidenceSummary": { "type": "string", "enum": ["high", "medium", "low"] },
+        "verificationStatus": { "type": "string", "enum": ["verified_match", "mismatch_suspicious", "needs_review", "not_found", "provider_unavailable"] },
+        "expiryStatus": { "type": "string", "enum": ["valid", "near_expiry", "expired", "ambiguous"] },
+        "sourceName": { "type": "string", "maxLength": 180 },
+        "sourceEvidence": { "type": "string", "maxLength": 2000 },
+        "safetyNotices": { "type": "string", "maxLength": 2000 },
+        "limitations": { "type": "string", "maxLength": 1000 },
+        "nextStep": { "type": "string", "maxLength": 600 },
+        "userCorrected": { "type": "boolean" },
+        "reviewStatus": { "type": "string", "enum": ["none", "pending_review", "escalated", "quarantined", "cleared"] },
+        "reviewerNotes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "portalRole", "medicineName", "verificationStatus", "expiryStatus", "sourceName", "confidenceSummary", "userCorrected", "reviewStatus", "createdAt", "updatedAt"]
+    },
+    "Prescription": {
+      "title": "Prescription",
+      "description": "Patient prescription tracking record with adherence logging.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "medicineName": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "dosage": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "frequency": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "prescriberName": { "type": "string", "maxLength": 140 },
+        "clinicName": { "type": "string", "maxLength": 160 },
+        "issueDate": { "type": "string", "maxLength": 40 },
+        "endDate": { "type": "string", "maxLength": 40 },
+        "status": { "type": "string", "enum": ["active", "completed", "paused", "flagged"] },
+        "notes": { "type": "string", "maxLength": 800 },
+        "linkedBatchNumber": { "type": "string", "maxLength": 80 },
+        "adherenceCount": { "type": "number" },
+        "lastTakenAt": { "type": "string", "maxLength": 60 },
+        "sourceDocumentHash": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "medicineName", "dosage", "frequency", "status", "adherenceCount", "createdAt", "updatedAt"]
+    },
+    "VerifiedDocument": {
+      "title": "VerifiedDocument",
+      "description": "Auditable document verification record with SHA-256 fingerprint and extracted claims.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "portalRole": { "type": "string", "enum": ["patient", "pharmacist"] },
+        "documentTitle": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "documentType": { "type": "string", "enum": ["prescription", "invoice", "leaflet", "coa", "lab_report", "other"] },
+        "fileName": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "fileMimeType": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "sha256Hash": { "type": "string", "minLength": 16, "maxLength": 128, "pattern": "^[a-fA-F0-9]+$" },
+        "issuerName": { "type": "string", "maxLength": 180 },
+        "documentDate": { "type": "string", "maxLength": 40 },
+        "extractedSummary": { "type": "string", "maxLength": 2000 },
+        "extractedEntities": { "type": "array" },
+        "anomalies": { "type": "array" },
+        "verificationStatus": { "type": "string", "enum": ["verified_match", "mismatch_suspicious", "needs_review", "not_found", "provider_unavailable"] },
+        "confidenceLevel": { "type": "string", "enum": ["high", "medium", "low"] },
+        "reviewNotes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "portalRole", "documentTitle", "documentType", "fileName", "fileMimeType", "sha256Hash", "verificationStatus", "confidenceLevel", "createdAt", "updatedAt"]
+    },
+    "InventoryBatch": {
+      "title": "InventoryBatch",
+      "description": "Pharmacy batch-level inventory stock record.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "pharmacyName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "medicineName": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "genericName": { "type": "string", "maxLength": 180 },
+        "strength": { "type": "string", "maxLength": 80 },
+        "dosageForm": { "type": "string", "maxLength": 80 },
+        "manufacturer": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "batchNumber": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "mfgDate": { "type": "string", "maxLength": 40 },
+        "expiryDate": { "type": "string", "minLength": 4, "maxLength": 40 },
+        "supplierName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "invoiceRef": { "type": "string", "maxLength": 100 },
+        "quantityOnHand": { "type": "number" },
+        "reorderThreshold": { "type": "number" },
+        "unitPrice": { "type": "number" },
+        "verificationStatus": { "type": "string", "enum": ["verified_match", "mismatch_suspicious", "needs_review", "not_found", "provider_unavailable"] },
+        "recallFlagged": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "pharmacyName", "medicineName", "manufacturer", "batchNumber", "expiryDate", "supplierName", "quantityOnHand", "reorderThreshold", "unitPrice", "verificationStatus", "recallFlagged", "createdAt", "updatedAt"]
+    },
+    "InventoryLedgerEntry": {
+      "title": "InventoryLedgerEntry",
+      "description": "Immutable append-only stock transaction movement.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "batchId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "batchNumber": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "medicineName": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "movementType": { "type": "string", "enum": ["RECEIPT", "DISPENSE", "RETURN", "ADJUSTMENT", "TRANSFER", "RECONCILIATION"] },
+        "quantityDelta": { "type": "number" },
+        "resultingBalance": { "type": "number" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "invoiceRef": { "type": "string", "maxLength": 100 },
+        "actorName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "batchId", "batchNumber", "medicineName", "movementType", "quantityDelta", "resultingBalance", "reason", "actorName", "createdAt"]
+    },
+    "TraceabilityEvent": {
+      "title": "TraceabilityEvent",
+      "description": "Immutable supply chain custody hand-off record for a batch.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "batchId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "batchNumber": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "medicineName": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "eventType": { "type": "string", "enum": ["MANUFACTURED", "DISPATCHED", "RECEIVED", "TRANSFERRED", "DISPENSED", "QUARANTINED"] },
+        "actorOrg": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "sourceLocation": { "type": "string", "maxLength": 160 },
+        "destinationLocation": { "type": "string", "maxLength": 160 },
+        "quantity": { "type": "number" },
+        "evidenceRef": { "type": "string", "maxLength": 140 },
+        "notes": { "type": "string", "maxLength": 500 },
+        "eventDate": { "type": "string", "minLength": 4, "maxLength": 40 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "batchId", "batchNumber", "medicineName", "eventType", "actorOrg", "quantity", "eventDate", "createdAt"]
+    },
+    "SafetyAlert": {
+      "title": "SafetyAlert",
+      "description": "Expiry, low-stock, recall, or mismatch safety notification.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "portalRole": { "type": "string", "enum": ["patient", "pharmacist"] },
+        "alertType": { "type": "string", "enum": ["expired", "near_expiry", "low_stock", "recall", "mismatch", "document_flag"] },
+        "severity": { "type": "string", "enum": ["critical", "warning", "info"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "triggerDetails": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "affectedProduct": { "type": "string", "maxLength": 180 },
+        "affectedBatch": { "type": "string", "maxLength": 80 },
+        "sourceReference": { "type": "string", "maxLength": 240 },
+        "status": { "type": "string", "enum": ["open", "acknowledged", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "portalRole", "alertType", "severity", "title", "triggerDetails", "status", "createdAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Multilingual grounded AI assistant conversation message.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "portalRole": { "type": "string", "enum": ["patient", "pharmacist"] },
+        "sessionId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "sender": { "type": "string", "enum": ["user", "assistant"] },
+        "language": { "type": "string", "enum": ["en", "hi", "hinglish"] },
+        "content": { "type": "string", "minLength": 1, "maxLength": 8000 },
+        "attachmentName": { "type": "string", "maxLength": 200 },
+        "groundingRef": { "type": "string", "maxLength": 240 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "portalRole", "sessionId", "sender", "language", "content", "createdAt"]
+    },
+    "AuditEvent": {
+      "title": "AuditEvent",
+      "description": "Immutable operational audit event.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "portalRole": { "type": "string", "enum": ["patient", "pharmacist"] },
+        "actorName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "action": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "targetType": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "targetId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "details": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "portalRole", "actorName", "action", "targetType", "targetId", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user account profile scoped strictly to its owner."
+    },
+    "/scans/{scanId}": {
+      "schema": { "$ref": "#/entities/MedicineScan" },
+      "description": "Medicine pack scans and verification evidence records."
+    },
+    "/prescriptions/{prescriptionId}": {
+      "schema": { "$ref": "#/entities/Prescription" },
+      "description": "Patient prescription tracking records."
+    },
+    "/verified_documents/{docId}": {
+      "schema": { "$ref": "#/entities/VerifiedDocument" },
+      "description": "Secure document verification records with SHA-256 hashes."
+    },
+    "/inventory_batches/{batchId}": {
+      "schema": { "$ref": "#/entities/InventoryBatch" },
+      "description": "Pharmacy batch inventory stock records."
+    },
+    "/inventory_ledger/{entryId}": {
+      "schema": { "$ref": "#/entities/InventoryLedgerEntry" },
+      "description": "Immutable append-only pharmacy stock ledger."
+    },
+    "/traceability_events/{eventId}": {
+      "schema": { "$ref": "#/entities/TraceabilityEvent" },
+      "description": "Immutable supply chain batch custody events."
+    },
+    "/alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/SafetyAlert" },
+      "description": "Expiry, recall, low-stock, and verification alerts."
+    },
+    "/chat_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Grounded multilingual AI assistant conversation history."
+    },
+    "/audit_events/{auditId}": {
+      "schema": { "$ref": "#/entities/AuditEvent" },
+      "description": "Immutable operational audit events."
+    }
+  }
+}
