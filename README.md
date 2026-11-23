@@ -10,6 +10,7 @@
   </a>
 
   <br/>
+  live link=https://meditrust-ai.ai.studio/
 
   <!-- Visual Tech Stack & Capability Badges -->
   <p>
